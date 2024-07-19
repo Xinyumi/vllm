@@ -52,6 +52,37 @@ void gelu_fast(torch::Tensor& out, torch::Tensor& input);
 
 void gelu_quick(torch::Tensor& out, torch::Tensor& input);
 
+#from qerve
+void rms_norm_general(torch::Tensor &out,    // [..., hidden_size]
+              torch::Tensor &input,  // [..., hidden_size]
+              torch::Tensor &weight, // [hidden_size]
+              torch::Tensor &scaling, // [tokens] or [1]
+              float epsilon,
+              bool use_per_token_quant);
+
+void rms_norm_general_fuse_sum(torch::Tensor &out,    // [..., hidden_size]
+              torch::Tensor &input,  // [..., hidden_size]
+              torch::Tensor &weight, // [hidden_size]
+              torch::Tensor &input_sum, // [tokens] or [1]
+              torch::Tensor &scaling, // [tokens] or [1]
+              float epsilon,
+              bool use_per_token_quant);
+
+void invoke_dequant_add_residual_rms_norm_quant(
+    torch::Tensor &out,      // [..., hidden_size]
+    torch::Tensor &input,    // [..., hidden_size]
+    torch::Tensor &residual, // [..., hidden_size]
+    torch::Tensor &gamma,    // [hidden_size]
+    at::Half scale, float epsilon);
+
+void invoke_dequant_add_residual_rms_norm_quant(
+    torch::Tensor &out,      // [..., hidden_size]
+    torch::Tensor &input,    // [..., hidden_size]
+    torch::Tensor &residual, // [..., hidden_size]
+    torch::Tensor &gamma,    // [hidden_size]
+    torch::Tensor &scale,    // [num_tokens]
+    float epsilon);
+
 #ifndef USE_ROCM
 torch::Tensor aqlm_gemm(const torch::Tensor& input, const torch::Tensor& codes,
                         const torch::Tensor& codebooks,
