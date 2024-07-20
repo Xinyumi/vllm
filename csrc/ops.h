@@ -52,7 +52,7 @@ void gelu_fast(torch::Tensor& out, torch::Tensor& input);
 
 void gelu_quick(torch::Tensor& out, torch::Tensor& input);
 
-#from qerve
+#from qerve laynorm.cu
 void rms_norm_general(torch::Tensor &out,    // [..., hidden_size]
               torch::Tensor &input,  // [..., hidden_size]
               torch::Tensor &weight, // [hidden_size]
@@ -82,6 +82,22 @@ void invoke_dequant_add_residual_rms_norm_quant(
     torch::Tensor &gamma,    // [hidden_size]
     torch::Tensor &scale,    // [num_tokens]
     float epsilon);
+
+#from qerve activation.cu
+
+void invoke_dequant_silu_and_mul_quant(torch::Tensor &out,   // [..., d]
+                                       torch::Tensor &input, // [..., 2 * d]
+                                       const float scale_gate,
+                                       const float scale_up,
+                                       const float scale_out);
+
+void invoke_dequant_silu_and_mul_quant(torch::Tensor &out,   // [..., d]
+                                       torch::Tensor &input, // [..., 2 * d]
+                                       const float scale_gate,
+                                       const float scale_up,
+                                       torch::Tensor &scale_out, // [num_tokens]
+                                       torch::Tensor &tmp // [num_tokens, d]
+);
 
 #ifndef USE_ROCM
 torch::Tensor aqlm_gemm(const torch::Tensor& input, const torch::Tensor& codes,
