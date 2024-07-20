@@ -1,7 +1,7 @@
 #include <torch/all.h>
 #include <ATen/cuda/CUDAContext.h>
 #include <c10/cuda/CUDAGuard.h>
-
+#include <torch/extension.h>
 #include "dispatch_utils.h"
 #include "reduction_utils.cuh"
 #ifndef USE_ROCM
