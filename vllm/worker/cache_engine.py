@@ -26,6 +26,7 @@ class CacheEngine:
         model_config: ModelConfig,
         parallel_config: ParallelConfig,
         device_config: DeviceConfig,
+        kv_cache_config: Dict, #whether to use int4 for kv_cache
     ) -> None:
         self.cache_config = cache_config
         self.model_config = model_config
@@ -36,6 +37,7 @@ class CacheEngine:
         # Models like Jamba, have mixed typed layers, E.g Mamba
         self.num_attention_layers = model_config.get_num_attention_layers(
             parallel_config)
+        self.num_layers = model_config.get_num_layers(parallel_config) #from qerve
         self.num_kv_heads = model_config.get_num_kv_heads(parallel_config)
 
         self.block_size = cache_config.block_size
@@ -62,10 +64,39 @@ class CacheEngine:
             self.block_size,
         )
 
-        # Initialize the cache.
-        self.gpu_cache = self._allocate_kv_cache(
-            self.num_gpu_blocks, self.device_config.device_type)
-        self.cpu_cache = self._allocate_kv_cache(self.num_cpu_blocks, "cpu")
+        # Initialize the cache .
+        if cache_config.cache_dtype == "auto":
+            self.gpu_cache = self._allocate_kv_cache(
+               self.num_gpu_blocks, self.device_config.device_type)
+            self.cpu_cache = self._allocate_kv_cache(self.num_cpu_blocks, "cpu")
+        else:
+            self.gpu_cache = self.allocate_gpu_cache()
+            self.cpu_cache = self.allocate_cpu_cache()
+
+        # Initialize the cache from qerve.
+        self.elements_per_block = prod(self.get_key_block_shape())
+        # k and v (*2), 2 bytes per unit (*2)
+        self.num_bytes_per_block = self.elements_per_block // (
+            2 if kv_cache_config["INT4_ENABLED"] else 1
+        ) + self.block_size * self.num_heads * (
+            4 if kv_cache_config["ZEROS_ENABLED"] else 2
+        )
+        if kv_cache_config["INT4_ENABLED"]:
+            assert kv_cache_config[
+                "ZEROS_ENABLED"
+            ], "INT4 KV Cache must be used with Zero Points."
+            print("[INFO] USE INT4 w/ ZERO_POINTS for KV CACHE")
+        else:
+            assert kv_cache_config[
+                "ZEROS_ENABLED"
+            ], "INT8 KV Cache must be used with Zero Points."
+            print("[INFO] USE INT8 for KV CACHE")
+
+        # Initialize the stream for caching operations.
+        self.cache_stream = torch.cuda.Stream()
+        assert self.cache_stream != torch.cuda.current_stream()
+        # Initialize the events for stream synchronization.
+        self.events = [torch.cuda.Event() for _ in range(self.num_layers)]
 
     def _allocate_kv_cache(
         self,
@@ -87,6 +118,48 @@ class CacheEngine:
                             pin_memory=pin_memory,
                             device=device))
         return kv_cache
+
+    def allocate_gpu_cache(self) -> List[KVCache]:
+        gpu_cache: List[KVCache] = []
+        key_block_shape = self.get_key_block_shape()
+        value_block_shape = self.get_value_block_shape()
+        for _ in range(self.num_layers):
+            key_blocks = torch.empty(
+                size=(
+                    self.num_gpu_blocks,
+                    self.num_bytes_per_block,
+                ),
+                dtype=self.dtype,
+                device="cuda",
+            )
+            value_blocks = torch.empty(
+                size=(self.num_gpu_blocks, self.num_bytes_per_block),
+                dtype=self.dtype,
+                device="cuda",
+            )
+            gpu_cache.append((key_blocks, value_blocks))
+        return gpu_cache
+
+    def allocate_cpu_cache(self) -> List[KVCache]:
+        cpu_cache: List[KVCache] = []
+        key_block_shape = self.get_key_block_shape()
+        value_block_shape = self.get_value_block_shape()
+        pin_memory = True
+        for _ in range(self.num_layers):
+            key_blocks = torch.empty(
+                size=(self.num_cpu_blocks, *key_block_shape),
+                dtype=self.dtype,
+                pin_memory=pin_memory,
+                device="cpu",
+            )
+            value_blocks = torch.empty(
+                size=(self.num_cpu_blocks, *value_block_shape),
+                dtype=self.dtype,
+                pin_memory=pin_memory,
+                device="cpu",
+            )
+            cpu_cache.append((key_blocks, value_blocks))
+        return cpu_cache
 
     def swap_in(self, src_to_dst: torch.Tensor) -> None:
         for i in range(self.num_attention_layers):
