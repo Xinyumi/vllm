@@ -103,6 +103,41 @@ void invoke_dequant_silu_and_mul_quant(torch::Tensor &out,   // [..., d]
                                        torch::Tensor &tmp // [num_tokens, d]
 );
 
+//from qerve fused.cpp
+void invoke_dequant_add_residual(
+    torch::Tensor &out,      // [..., hidden_size]
+    torch::Tensor &input,    // [..., hidden_size]
+    torch::Tensor &residual, // [..., hidden_size]
+    at::Half scale);
+
+void invoke_dequant_add_residual(
+    torch::Tensor &out,      // [..., hidden_size]
+    torch::Tensor &input,    // [..., hidden_size]
+    torch::Tensor &residual, // [..., hidden_size]
+    torch::Tensor &scale);   // [num_tokens]
+
+void invoke_dequant(torch::Tensor &out,   // [..., hidden_size]
+                    torch::Tensor &input, // [..., hidden_size]
+                    at::Half scale);
+
+void invoke_quant(torch::Tensor &out,   // [..., hidden_size]
+                  torch::Tensor &input, // [..., hidden_size]
+                  at::Half scale);
+
+void invoke_quant(torch::Tensor &out,   // [..., hidden_size]
+                  torch::Tensor &input, // [..., hidden_size]
+                  torch::Tensor &scale);  // [num_tokens]
+
+void invoke_quant_fuse_sum(torch::Tensor &out,   // [..., hidden_size]
+                            torch::Tensor &input, // [..., hidden_size]
+                            at::Half input_sum,
+                            at::Half scale);
+
+void invoke_quant_fuse_sum(torch::Tensor &out,   // [..., hidden_size]
+                  torch::Tensor &input, // [..., hidden_size]
+                  torch::Tensor &input_sum,
+                  torch::Tensor &scale);  // [num_tokens]
+
 #ifndef USE_ROCM
 torch::Tensor aqlm_gemm(const torch::Tensor& input, const torch::Tensor& codes,
                         const torch::Tensor& codebooks,
