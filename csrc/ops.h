@@ -42,6 +42,10 @@ void batched_rotary_embedding(torch::Tensor& positions, torch::Tensor& query,
 
 void silu_and_mul(torch::Tensor& out, torch::Tensor& input);
 
+//from qerve ativation.cu
+void silu_and_mul_qerve(torch::Tensor &out,    // [..., d]
+                  torch::Tensor &input); // [..., 2 * d]
+
 void gelu_and_mul(torch::Tensor& out, torch::Tensor& input);
 
 void gelu_tanh_and_mul(torch::Tensor& out, torch::Tensor& input);
@@ -52,7 +56,7 @@ void gelu_fast(torch::Tensor& out, torch::Tensor& input);
 
 void gelu_quick(torch::Tensor& out, torch::Tensor& input);
 
-#from qerve laynorm.cu
+//from qerve laynorm.cu
 void rms_norm_general(torch::Tensor &out,    // [..., hidden_size]
               torch::Tensor &input,  // [..., hidden_size]
               torch::Tensor &weight, // [hidden_size]
