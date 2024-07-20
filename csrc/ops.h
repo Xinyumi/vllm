@@ -2,6 +2,7 @@
 #
 #include <optional>
 #include <torch/library.h>
+#include <cuda_fp16.h>
 
 void paged_attention_v1(
     torch::Tensor& out, torch::Tensor& query, torch::Tensor& key_cache,
