@@ -19,7 +19,7 @@ from vllm.model_executor.layers.w4a8_linear import W4A8OF16LinearDynamicInputSca
 from qserve.modeling.layers.sampler import Sampler
 from qserve.sampling_params import SamplingParams
 from qserve.utils.input_metadata import InputMetadata
-from qserve.utils.quant_config import QServeQuantConfig
+from vllm.quant_config import QServeQuantConfig
 from qserve.utils.weight_utils import (
     convert_pyslice_to_tensor,
     hf_model_weights_iterator,
