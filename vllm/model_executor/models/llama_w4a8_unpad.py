@@ -9,7 +9,7 @@ from qserve_backend import fused_kernels
 from torch import nn
 from transformers import LlamaConfig
 
-import qserve.utils.constants
+import vllm.constants
 #from qserve.modeling.layers.activation import SiluAndMulQuant
 from vllm.model_executor.layers.activation import SiluAndMulQuant
 #from qserve.modeling.layers.layernorm import RMSNorm, RMSNormGeneral
@@ -18,16 +18,16 @@ from vllm.model_executor.layers.w4a8_linear import W4A8OF16LinearDynamicInputSca
 
 from vllm.model_executor.layers.samplerw4a8 import Sampler
 from vllm.sampling_params_w4a8 import SamplingParams
-from vllm.utils.input_metadata import InputMetadata
+from vllm.input_metadata import InputMetadata
 from vllm.quant_config import QServeQuantConfig
-from qserve.utils.weight_utils import (
+from vllm.weight_utils import (
     convert_pyslice_to_tensor,
     hf_model_weights_iterator,
     load_padded_tensor_parallel_vocab,
     load_tensor_parallel_weights,
 )
 
-max_seq_len = qserve.utils.constants.max_seq_len
+max_seq_len = vllm.constants.max_seq_len
 
 
 class LlamaMLP(nn.Module):
