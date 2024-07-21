@@ -13,8 +13,9 @@ import qserve.utils.constants
 #from qserve.modeling.layers.activation import SiluAndMulQuant
 from vllm.model_executor.layers.activation import SiluAndMulQuant
 #from qserve.modeling.layers.layernorm import RMSNorm, RMSNormGeneral
-from vllm.model_executor.layers.layernorm import RMSNorm, RMSNormGeneral
-from qserve.modeling.layers.quantized_linear import W4A8OF16LinearDynamicInputScale
+#from vllm.model_executor.layers.layernorm import RMSNorm, RMSNormGeneral
+from vllm.model_executor.layers.w4a8_linear import W4A8OF16LinearDynamicInputScale
+
 from qserve.modeling.layers.sampler import Sampler
 from qserve.sampling_params import SamplingParams
 from qserve.utils.input_metadata import InputMetadata
