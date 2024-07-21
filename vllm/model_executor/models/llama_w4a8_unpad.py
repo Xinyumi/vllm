@@ -10,7 +10,8 @@ from torch import nn
 from transformers import LlamaConfig
 
 import qserve.utils.constants
-from qserve.modeling.layers.activation import SiluAndMulQuant
+#from qserve.modeling.layers.activation import SiluAndMulQuant
+from vllm.model_executor.layers.activation import SiluAndMulQuant
 #from qserve.modeling.layers.layernorm import RMSNorm, RMSNormGeneral
 from vllm.model_executor.layers.layernorm import RMSNorm, RMSNormGeneral
 from qserve.modeling.layers.quantized_linear import W4A8OF16LinearDynamicInputScale
